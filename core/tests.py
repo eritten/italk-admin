@@ -13,6 +13,8 @@ class AuthFlowTests(TestCase):
         response = self.client.post("/api/v1/auth/register", {"email": "user@example.com"}, format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("multipart/alternative", mail.outbox[0].message().get_content_type())
+        self.assertIn("Your verification code", mail.outbox[0].alternatives[0].content)
 
         otp = EmailOTP.objects.get(user__email="user@example.com", purpose="REGISTRATION")
         verify = self.client.post(

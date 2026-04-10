@@ -6,7 +6,8 @@ from datetime import timedelta
 
 import jwt
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 
@@ -43,10 +44,22 @@ def build_access_token(*, user_id: str, role: str, session_id: str) -> str:
 
 
 def send_otp_email(email: str, code: str, mode: str) -> None:
-    send_mail(
-        subject=f"Your iTalkVoIP {mode} OTP",
-        message=f"Your one-time code is {code}. It expires in {settings.OTP_TTL_MINUTES} minutes.",
+    subject = f"Your iTalkVoIP {mode.title()} Verification Code"
+    context = {
+        "code": code,
+        "mode": mode,
+        "expires_in_minutes": settings.OTP_TTL_MINUTES,
+        "app_name": "iTalkVoIP",
+        "support_email": settings.DEFAULT_FROM_EMAIL,
+    }
+    text_body = render_to_string("core/emails/otp_email.txt", context)
+    html_body = render_to_string("core/emails/otp_email.html", context)
+
+    message = EmailMultiAlternatives(
+        subject=subject,
+        body=text_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
+        to=[email],
     )
+    message.attach_alternative(html_body, "text/html")
+    message.send(fail_silently=False)
