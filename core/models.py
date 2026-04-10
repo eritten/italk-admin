@@ -107,7 +107,13 @@ class Session(TimeStampedModel):
 
 class Extension(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, related_name="extension", on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User,
+        related_name="extension",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     domain = models.ForeignKey(Domain, related_name="extensions", on_delete=models.CASCADE)
     extension_number = models.PositiveIntegerField()
     sip_password = models.CharField(max_length=64)

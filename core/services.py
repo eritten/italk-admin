@@ -14,7 +14,6 @@ from .utils import (
     build_access_token,
     generate_otp_code,
     generate_refresh_token,
-    generate_sip_password,
     hash_token,
     otp_expiry,
     send_otp_email,
@@ -106,13 +105,22 @@ def revoke_session(*, refresh_token: str) -> None:
     )
 
 
-def register_user(*, email: str) -> dict:
+def register_user(*, email: str, domain_id: str | None = None) -> dict:
     email = email.lower()
     user = User.objects.filter(email=email).first()
     if user and user.role != UserRole.USER:
         raise Conflict("This email belongs to an admin account")
+    domain = None
+    if domain_id is not None:
+        try:
+            domain = Domain.objects.get(id=domain_id, is_active=True)
+        except Domain.DoesNotExist as exc:
+            raise NotFound("Domain not found") from exc
     if user is None:
-        user = User.objects.create_user(email=email, role=UserRole.USER)
+        user = User.objects.create_user(email=email, role=UserRole.USER, selected_domain=domain)
+    elif domain is not None and user.selected_domain_id != domain.id:
+        user.selected_domain = domain
+        user.save(update_fields=["selected_domain"])
 
     issue_otp(user=user, purpose=OtpPurpose.REGISTRATION)
     return {
@@ -147,8 +155,11 @@ def verify_registration_otp(*, email: str, otp: str, user_agent: str = "", ip_ad
     if not user.is_verified:
         user.is_verified = True
         user.save(update_fields=["is_verified"])
+    assignment = None
+    if user.selected_domain_id:
+        assignment = assign_domain_and_provision_extension(user=user, domain_id=str(user.selected_domain_id))
     tokens = create_session(user=user, user_agent=user_agent, ip_address=ip_address)
-    return {
+    response = {
         "message": "Email verified successfully",
         "user": {
             "id": str(user.id),
@@ -157,6 +168,9 @@ def verify_registration_otp(*, email: str, otp: str, user_agent: str = "", ip_ad
         },
         "tokens": tokens,
     }
+    if assignment is not None:
+        response["assignment"] = assignment
+    return response
 
 
 def request_login_otp(*, email: str) -> dict:
@@ -332,16 +346,19 @@ def list_active_domains() -> dict:
     }
 
 
-def get_next_extension_number(*, domain: Domain) -> int:
-    candidate = domain.extension_start
-    existing_numbers = list(domain.extensions.order_by("extension_number").values_list("extension_number", flat=True))
-    for number in existing_numbers:
-        if number == candidate:
-            candidate += 1
-            continue
-        if number > candidate:
-            break
-    return candidate
+def serialize_extension_assignment(*, extension: Extension, already_provisioned: bool) -> dict:
+    return {
+        "domain": {
+            "id": str(extension.domain.id),
+            "identifier": extension.domain.identifier,
+            "label": extension.domain.label,
+        },
+        "extension": {
+            "number": extension.extension_number,
+            "password": extension.sip_password,
+        },
+        "alreadyProvisioned": already_provisioned,
+    }
 
 
 def assign_domain_and_provision_extension(*, user: User, domain_id: str) -> dict:
@@ -352,43 +369,28 @@ def assign_domain_and_provision_extension(*, user: User, domain_id: str) -> dict
 
     existing_extension = getattr(user, "extension", None)
     if existing_extension:
-        return {
-            "domain": {
-                "id": str(existing_extension.domain.id),
-                "identifier": existing_extension.domain.identifier,
-                "label": existing_extension.domain.label,
-            },
-            "extension": {
-                "number": existing_extension.extension_number,
-                "password": existing_extension.sip_password,
-            },
-            "alreadyProvisioned": True,
-        }
+        if user.selected_domain_id != existing_extension.domain_id:
+            user.selected_domain = existing_extension.domain
+            user.save(update_fields=["selected_domain"])
+        return serialize_extension_assignment(extension=existing_extension, already_provisioned=True)
 
     for _ in range(3):
         try:
             with transaction.atomic():
                 locked_domain = Domain.objects.select_for_update().get(id=domain.id)
-                extension = Extension.objects.create(
-                    user=user,
-                    domain=locked_domain,
-                    extension_number=get_next_extension_number(domain=locked_domain),
-                    sip_password=generate_sip_password(),
+                extension = (
+                    Extension.objects.select_for_update()
+                    .filter(domain=locked_domain, user__isnull=True)
+                    .order_by("extension_number")
+                    .first()
                 )
+                if extension is None:
+                    raise Conflict("No free extensions available for the selected domain")
+                extension.user = user
+                extension.save(update_fields=["user", "updated_at"])
                 user.selected_domain = locked_domain
                 user.save(update_fields=["selected_domain"])
-            return {
-                "domain": {
-                    "id": str(extension.domain.id),
-                    "identifier": extension.domain.identifier,
-                    "label": extension.domain.label,
-                },
-                "extension": {
-                    "number": extension.extension_number,
-                    "password": extension.sip_password,
-                },
-                "alreadyProvisioned": False,
-            }
+            return serialize_extension_assignment(extension=extension, already_provisioned=False)
         except IntegrityError:
             continue
 

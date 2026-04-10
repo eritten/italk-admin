@@ -13,6 +13,7 @@ from .serializers import (
     DomainSelectSerializer,
     EmailSerializer,
     RefreshSerializer,
+    RegistrationSerializer,
     VerifyOtpSerializer,
 )
 from .services import (
@@ -50,9 +51,18 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = EmailSerializer(data=request.data)
+        serializer = RegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(register_user(email=serializer.validated_data["email"]))
+        return Response(
+            register_user(
+                email=serializer.validated_data["email"],
+                domain_id=(
+                    str(serializer.validated_data["domainId"])
+                    if "domainId" in serializer.validated_data
+                    else None
+                ),
+            )
+        )
 
 
 class VerifyRegistrationView(APIView):

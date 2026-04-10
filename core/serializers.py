@@ -5,6 +5,18 @@ class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+class RegistrationSerializer(EmailSerializer):
+    domainId = serializers.UUIDField(required=False)
+    domainUuid = serializers.UUIDField(required=False)
+
+    def validate(self, attrs):
+        domain_id = attrs.get("domainId") or attrs.get("domainUuid")
+        if domain_id is not None:
+            attrs["domainId"] = domain_id
+        attrs.pop("domainUuid", None)
+        return attrs
+
+
 class VerifyOtpSerializer(EmailSerializer):
     otp = serializers.RegexField(regex=r"^\d{6}$")
 
