@@ -50,6 +50,13 @@ The seeded admin login comes from:
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 
+For HTTPS deployments behind Nginx or another reverse proxy, set:
+
+- `ALLOWED_HOSTS`
+- `CSRF_TRUSTED_ORIGINS`
+- `SESSION_COOKIE_SECURE=true`
+- `CSRF_COOKIE_SECURE=true`
+
 ## Notes
 
 - OTP emails use SMTP when configured.
