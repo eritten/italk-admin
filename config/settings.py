@@ -124,18 +124,18 @@ JWT_ACCESS_SECRET = os.getenv("JWT_ACCESS_SECRET", SECRET_KEY)
 JWT_ACCESS_TTL = parse_duration(os.getenv("JWT_ACCESS_TTL", "15m"), fallback_minutes=15)
 REFRESH_TOKEN_TTL_DAYS = env_int("REFRESH_TOKEN_TTL_DAYS", 30)
 OTP_TTL_MINUTES = env_int("OTP_TTL_MINUTES", 10)
-DEFAULT_FROM_EMAIL = os.getenv("SMTP_FROM", "noreply@italkvoip.local")
 
-if os.getenv("SMTP_HOST"):
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = os.getenv("SMTP_HOST", "")
-    EMAIL_PORT = env_int("SMTP_PORT", 587)
-    EMAIL_HOST_USER = os.getenv("SMTP_USER", "")
-    EMAIL_HOST_PASSWORD = os.getenv("SMTP_PASS", "")
-    EMAIL_USE_SSL = env_bool("SMTP_SECURE", False)
-    EMAIL_USE_TLS = not EMAIL_USE_SSL
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend" if os.getenv("SMTP_HOST") else "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", os.getenv("SMTP_HOST", ""))
+EMAIL_PORT = env_int("EMAIL_PORT", env_int("SMTP_PORT", 587))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", os.getenv("SMTP_USER", ""))
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", os.getenv("SMTP_PASS", ""))
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", env_bool("SMTP_SECURE", False))
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", not EMAIL_USE_SSL)
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", os.getenv("SMTP_FROM", "noreply@italkvoip.local"))
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@italkvoip.local")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "ChangeMe123!")
