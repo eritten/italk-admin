@@ -1,4 +1,15 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: italkvoip-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-italk_admin}
+      POSTGRES_USER: ${POSTGRES_USER:-italk_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-italk_admin_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   app:
     build:
       context: .
@@ -8,4 +19,9 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    depends_on:
+      - db
     restart: unless-stopped
+
+volumes:
+  postgres_data:
