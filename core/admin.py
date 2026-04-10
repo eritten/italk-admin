@@ -49,6 +49,12 @@ class ExtensionAdmin(admin.ModelAdmin):
     search_fields = ("user__email", "domain__identifier", "domain__label")
     readonly_fields = ("created_at", "updated_at")
 
+    def get_fields(self, request, obj=None):
+        fields = ["domain", "extension_number", "sip_password", "created_at", "updated_at"]
+        if obj is not None:
+            fields.insert(0, "user")
+        return fields
+
 
 @admin.register(EmailOTP)
 class EmailOTPAdmin(admin.ModelAdmin):

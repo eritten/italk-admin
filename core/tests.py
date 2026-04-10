@@ -1,10 +1,12 @@
 from datetime import timedelta
 
 from django.core import mail
+from django.contrib.admin.sites import AdminSite
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from .admin import ExtensionAdmin
 from .models import Domain, EmailOTP, Extension, User, UserRole
 
 
@@ -153,3 +155,11 @@ class AdminApiTests(TestCase):
         dashboard = self.client.get("/api/v1/admin/dashboard")
         self.assertEqual(dashboard.status_code, 200)
         self.assertIn("stats", dashboard.json())
+
+    def test_extension_admin_hides_user_field_when_creating(self):
+        admin_view = ExtensionAdmin(Extension, AdminSite())
+        create_fields = admin_view.get_fields(request=None, obj=None)
+        change_fields = admin_view.get_fields(request=None, obj=Extension(domain=Domain.objects.first(), extension_number=1000))
+
+        self.assertNotIn("user", create_fields)
+        self.assertIn("user", change_fields)
