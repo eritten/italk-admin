@@ -1,0 +1,1034 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 1463 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(ITALKVOIP FRONTEND DEVELOPER GUIDE) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(OVERVIEW) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(This backend is a Django + Django REST Framework application that serves:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- User registration and OTP verification) Tj
+0 -15 Td
+(- User login via OTP) Tj
+0 -15 Td
+(- Token refresh and logout) Tj
+0 -15 Td
+(- Domain discovery) Tj
+0 -15 Td
+(- Domain selection and SIP extension provisioning) Tj
+0 -15 Td
+(- Admin authentication) Tj
+0 -15 Td
+(- Admin reporting and domain management) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Base URLs:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- API: `http://localhost:3000/api/v1`) Tj
+0 -15 Td
+(- Django Admin: `http://localhost:3000/admin/`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(All API payloads are JSON unless noted otherwise.) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(AUTHENTICATION MODEL) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(There are two application roles:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `USER`) Tj
+0 -15 Td
+(- `ADMIN`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(The API uses bearer access tokens for protected requests:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    Authorization: Bearer <accessToken>) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(The backend returns both:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `accessToken`) Tj
+0 -15 Td
+(- `refreshToken`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Recommended frontend handling:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(1. Store the access token in memory when possible.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1283 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(2. Treat the refresh token as sensitive and store it carefully.) Tj
+0 -15 Td
+(3. On `401` during an authenticated request, attempt `POST /auth/refresh`.) Tj
+0 -15 Td
+(4. If refresh fails, force sign-out and redirect to the appropriate login screen.) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(USER AUTHENTICATION FLOW) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(1. Register) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/register`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "email": "user@example.com") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Success response:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "message": "OTP sent to email",) Tj
+0 -15 Td
+(      "email": "user@example.com",) Tj
+0 -15 Td
+(      "expiresInMinutes": 10) Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(2. Resend Registration OTP) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/register/resend-otp`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "email": "user@example.com") Tj
+0 -15 Td
+(    }) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1235 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(3. Verify Registration OTP) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/verify-registration`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "email": "user@example.com",) Tj
+0 -15 Td
+(      "otp": "123456") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Success response includes tokens:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "message": "Email verified successfully",) Tj
+0 -15 Td
+(      "user": {) Tj
+0 -15 Td
+(        "id": "uuid",) Tj
+0 -15 Td
+(        "email": "user@example.com",) Tj
+0 -15 Td
+(        "isVerified": true) Tj
+0 -15 Td
+(      },) Tj
+0 -15 Td
+(      "tokens": {) Tj
+0 -15 Td
+(        "accessToken": "jwt",) Tj
+0 -15 Td
+(        "refreshToken": "token",) Tj
+0 -15 Td
+(        "session": {) Tj
+0 -15 Td
+(          "id": "uuid",) Tj
+0 -15 Td
+(          "expiresAt": "timestamp") Tj
+0 -15 Td
+(        }) Tj
+0 -15 Td
+(      }) Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(LOGIN FLOW) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(1. Request Login OTP) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1108 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/login/request-otp`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "email": "user@example.com") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(2. Resend Login OTP) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/login/resend-otp`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "email": "user@example.com") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(3. Verify Login OTP) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/login/verify-otp`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "email": "user@example.com",) Tj
+0 -15 Td
+(      "otp": "123456") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Response shape mirrors registration verification and returns tokens.) Tj
+0 -15 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1017 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(SESSION MANAGEMENT) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Refresh Access Token) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/refresh`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "refreshToken": "your-refresh-token") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Logout) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/logout`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "refreshToken": "your-refresh-token") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(USER DOMAIN AND EXTENSION APIS) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(List Active Domains) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `GET /domains`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(No auth required.) Tj
+0 -15 Td
+() Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 1166 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(Example response:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "data": [) Tj
+0 -15 Td
+(        {) Tj
+0 -15 Td
+(          "id": "uuid",) Tj
+0 -15 Td
+(          "identifier": "us-east",) Tj
+0 -15 Td
+(          "label": "US East") Tj
+0 -15 Td
+(        }) Tj
+0 -15 Td
+(      ]) Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Select Domain and Provision Extension) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /onboarding/domain`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Headers:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    Authorization: Bearer <accessToken>) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "domainId": "uuid-of-domain") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Example response:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "domain": {) Tj
+0 -15 Td
+(        "id": "uuid",) Tj
+0 -15 Td
+(        "identifier": "us-east",) Tj
+0 -15 Td
+(        "label": "US East") Tj
+0 -15 Td
+(      },) Tj
+0 -15 Td
+(      "extension": {) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 1129 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(        "number": 1000,) Tj
+0 -15 Td
+(        "password": "generated-password") Tj
+0 -15 Td
+(      },) Tj
+0 -15 Td
+(      "alreadyProvisioned": false) Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Get Provisioned Extension) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `GET /onboarding/extension`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Headers:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    Authorization: Bearer <accessToken>) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(ADMIN APIS) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Admin Login) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Endpoint:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `POST /auth/admin/login`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Request body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "email": "eritten@niveel.com",) Tj
+0 -15 Td
+(      "password": "1234") Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Success response:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "message": "Admin login successful",) Tj
+0 -15 Td
+(      "admin": {) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 1273 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(        "id": "uuid",) Tj
+0 -15 Td
+(        "email": "eritten@niveel.com") Tj
+0 -15 Td
+(      },) Tj
+0 -15 Td
+(      "tokens": {) Tj
+0 -15 Td
+(        "accessToken": "jwt",) Tj
+0 -15 Td
+(        "refreshToken": "token",) Tj
+0 -15 Td
+(        "session": {) Tj
+0 -15 Td
+(          "id": "uuid",) Tj
+0 -15 Td
+(          "expiresAt": "timestamp") Tj
+0 -15 Td
+(        }) Tj
+0 -15 Td
+(      }) Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Admin Dashboard) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `GET /admin/dashboard`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Returns aggregate counts:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- users) Tj
+0 -15 Td
+(- domains) Tj
+0 -15 Td
+(- provisionedExtensions) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Admin Domains) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `GET /admin/domains`) Tj
+0 -15 Td
+(- `POST /admin/domains`) Tj
+0 -15 Td
+(- `PATCH /admin/domains/<domain_id>`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Create domain body:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(    {) Tj
+0 -15 Td
+(      "identifier": "eu-west",) Tj
+0 -15 Td
+(      "label": "EU West",) Tj
+0 -15 Td
+(      "extensionStart": 1000) Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Patch body fields are optional:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 1577 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(    {) Tj
+0 -15 Td
+(      "label": "EU West Updated",) Tj
+0 -15 Td
+(      "isActive": true,) Tj
+0 -15 Td
+(      "extensionStart": 2000) Tj
+0 -15 Td
+(    }) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Admin Users) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `GET /admin/users`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(FRONTEND INTEGRATION NOTES) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Recommended screens:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- Registration) Tj
+0 -15 Td
+(- Registration OTP verification) Tj
+0 -15 Td
+(- Login request OTP) Tj
+0 -15 Td
+(- Login OTP verification) Tj
+0 -15 Td
+(- Domain selection) Tj
+0 -15 Td
+(- Extension details) Tj
+0 -15 Td
+(- Admin login) Tj
+0 -15 Td
+(- Admin dashboard) Tj
+0 -15 Td
+(- Admin domains) Tj
+0 -15 Td
+(- Admin users) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Recommended UX behavior:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- Disable submit buttons during requests.) Tj
+0 -15 Td
+(- Show countdown timers for OTP expiration and resend states.) Tj
+0 -15 Td
+(- Normalize email input to lowercase before submit.) Tj
+0 -15 Td
+(- Preserve the email value between OTP request and OTP verification screens.) Tj
+0 -15 Td
+(- Handle `401`, `403`, and `404` with explicit user-friendly messages.) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(ERROR HANDLING EXPECTATIONS) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Typical API failure classes:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- `400` validation problems) Tj
+0 -15 Td
+(- `401` invalid credentials or invalid token) Tj
+0 -15 Td
+(- `403` permission or verification issues) Tj
+0 -15 Td
+(- `404` missing user, domain, or extension) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 1495 >>
+stream
+BT
+/F1 11 Tf
+54 740 Td
+(- `409` conflict conditions such as invalid account type) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Frontend recommendation:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- Show field-level errors when validation details are present.) Tj
+0 -15 Td
+(- Fall back to a generic toast or alert using `detail` or `message`.) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(SUGGESTED FRONTEND API LAYER) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(Create a single API client wrapper that:) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- Applies the base URL) Tj
+0 -15 Td
+(- Sends JSON headers) Tj
+0 -15 Td
+(- Injects bearer tokens automatically) Tj
+0 -15 Td
+(- Retries once on refresh flow when appropriate) Tj
+0 -15 Td
+(- Centralizes parsing of API errors) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(LOCAL DEVELOPMENT NOTES) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- Local API base URL: `http://localhost:3000/api/v1`) Tj
+0 -15 Td
+(- Local Django admin: `http://localhost:3000/admin/`) Tj
+0 -15 Td
+(- Current admin account:) Tj
+0 -15 Td
+(- Email: `eritten@niveel.com`) Tj
+0 -15 Td
+(- Password: `1234`) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(RELEASE CHECKLIST FOR FRONTEND) Tj
+0 -15 Td
+() Tj
+0 -15 Td
+() Tj
+0 -15 Td
+(- Confirm auth flows against real API responses) Tj
+0 -15 Td
+(- Verify resend OTP states) Tj
+0 -15 Td
+(- Verify refresh token flow) Tj
+0 -15 Td
+(- Verify domain provisioning success and already-provisioned response) Tj
+0 -15 Td
+(- Verify admin role separation from user flows) Tj
+0 -15 Td
+(- Verify loading, empty, and error states for admin lists) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R] /Count 10 >>
+endobj
+23 0 obj
+<< /Type /Catalog /Pages 22 0 R >>
+endobj
+xref
+0 24
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000001600 00000 n 
+0000001727 00000 n 
+0000003062 00000 n 
+0000003189 00000 n 
+0000004476 00000 n 
+0000004603 00000 n 
+0000005763 00000 n 
+0000005890 00000 n 
+0000006960 00000 n 
+0000007089 00000 n 
+0000008308 00000 n 
+0000008437 00000 n 
+0000009619 00000 n 
+0000009748 00000 n 
+0000011074 00000 n 
+0000011203 00000 n 
+0000012833 00000 n 
+0000012962 00000 n 
+0000014510 00000 n 
+0000014639 00000 n 
+0000014758 00000 n 
+trailer
+<< /Size 24 /Root 23 0 R >>
+startxref
+14809
+%%EOF

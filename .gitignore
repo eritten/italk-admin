@@ -1,0 +1,10 @@
+.env
+.server.pid
+server.log
+server.err.log
+__pycache__/
+.pytest_cache/
+.venv/
+db.sqlite3
+staticfiles/
+*.pyc
